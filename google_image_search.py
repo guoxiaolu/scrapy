@@ -1,3 +1,4 @@
+#coding=utf-8
 # Copyright (c) 2016 Kenneth Blomqvist
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -34,7 +35,7 @@ def largest_file(dir_path):
     else:
         return 0
 
-def fetch_image_urls(query, images_to_download):
+def fetch_image_urls_google(query, images_to_download):
     image_urls = set()
 
     search_url = "https://www.google.com/search?safe=off&site=&tbm=isch&source=hp&q={q}&oq={q}&gs_l=img"
@@ -69,9 +70,41 @@ def fetch_image_urls(query, images_to_download):
     browser.quit()
     return image_urls
 
+def fetch_image_urls_soso(query, images_to_download):
+    image_urls = set()
+
+    search_url = "http://pic.sogou.com/pics?query={q}&di=2&_asf=pic.sogou.com&w=05009900"
+    # browser = webdriver.Firefox()
+    browser = webdriver.Chrome()
+    browser.get(search_url.format(q=query))
+    def scroll_to_bottom():
+        browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(5)
+
+    image_count = len(image_urls)
+    delta = 0
+    while image_count < images_to_download:
+        print("Found:", len(image_urls), "images")
+        scroll_to_bottom()
+
+        images = browser.find_elements_by_xpath('//div[@id="imgid"]/ul/li/a/img')
+        for img in images:
+            image_urls.add(img.get_attribute('src'))
+        delta = len(image_urls) - image_count
+        image_count = len(image_urls)
+
+        if delta == 0:
+            print("Can't find more images")
+            break
+
+    browser.quit()
+    return image_urls
+
 if __name__ == '__main__':
-    count = 100
-    savepath = os.path.abspath('./result/')
+    count = 300
+    is_google = False
+
+    savepath = os.path.abspath('./images/')
 
     query = []
     label = []
@@ -89,7 +122,10 @@ if __name__ == '__main__':
         query_directory = savepath + "/"+ label[i] + "/"
         ensure_directory(query_directory)
 
-        image_urls = fetch_image_urls(val, count)
+        if is_google:
+            image_urls = fetch_image_urls_google(val, count)
+        else:
+            image_urls = fetch_image_urls_soso(val, count)
 
         print("image count", len(image_urls))
         cnt = 0
@@ -98,7 +134,11 @@ if __name__ == '__main__':
             if url is None:
                 continue
             # print url
-            curl = 'curl -o ' + '\'%s_%04d.jpg\'' % (
-                label[i], cnt) + ' --insecure ' + '\''+url+'\'' + ' --socks5-hostname 127.0.0.1:1080\n'
+            if is_google:
+                curl = 'curl -o ' + '\'%s_%04d.jpg\'' % (
+                    label[i], cnt) + ' --insecure ' + '\''+url+'\'' + ' --socks5-hostname 127.0.0.1:1080\n'
+            else:
+                curl = 'curl -o ' + '\'%s_%04d.jpg\'' % (
+                    label[i], cnt) + ' --insecure ' + '\'' + url + '\'\n'
             os.system(curl)
             cnt += 1
