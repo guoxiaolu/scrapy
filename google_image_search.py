@@ -49,7 +49,7 @@ def fetch_image_urls_google(query, images_to_download):
     image_count = len(image_urls)
     delta = 0
     while image_count < images_to_download:
-        print("Found:", len(image_urls), "images")
+        print("Found:", len(image_urls), "plant_disease")
         scroll_to_bottom()
 
         images = browser.find_elements_by_css_selector("img.rg_ic")
@@ -59,7 +59,7 @@ def fetch_image_urls_google(query, images_to_download):
         image_count = len(image_urls)
 
         if delta == 0:
-            print("Can't find more images")
+            print("Can't find more plant_disease")
             break
 
         fetch_more_button = browser.find_element_by_css_selector(".ksb._kvc")
@@ -84,7 +84,7 @@ def fetch_image_urls_soso(query, images_to_download):
     image_count = len(image_urls)
     delta = 0
     while image_count < images_to_download:
-        print("Found:", len(image_urls), "images")
+        print("Found:", len(image_urls), "plant_disease")
         scroll_to_bottom()
 
         images = browser.find_elements_by_xpath('//div[@id="imgid"]/ul/li/a/img')
@@ -94,17 +94,17 @@ def fetch_image_urls_soso(query, images_to_download):
         image_count = len(image_urls)
 
         if delta == 0:
-            print("Can't find more images")
+            print("Can't find more plant_disease")
             break
 
     browser.quit()
     return image_urls
 
 if __name__ == '__main__':
-    count = 300
-    is_google = False
+    count = 100
+    is_google = True
 
-    savepath = os.path.abspath('./images/')
+    savepath = os.path.abspath('./image/')
 
     query = []
     label = []
@@ -136,9 +136,9 @@ if __name__ == '__main__':
             # print url
             if is_google:
                 curl = 'curl -o ' + '\'%s_%04d.jpg\'' % (
-                    label[i], cnt) + ' --insecure ' + '\''+url+'\'' + ' --socks5-hostname 127.0.0.1:1080\n'
+                    label[i], cnt) + ' --connect-timeout 40 -m 80 --insecure ' + '\''+url+'\'' + ' --socks5-hostname 127.0.0.1:1080\n'
             else:
                 curl = 'curl -o ' + '\'%s_%04d.jpg\'' % (
-                    label[i], cnt) + ' --insecure ' + '\'' + url + '\'\n'
+                    label[i], cnt) + ' --connect-timeout 40 -m 80 --insecure ' + '\'' + url + '\'\n'
             os.system(curl)
             cnt += 1
